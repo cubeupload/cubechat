@@ -3,6 +3,8 @@
 .env.php
 .env
 
+/vendor
+
 # =========================
 # Operating System Files
 # =========================
