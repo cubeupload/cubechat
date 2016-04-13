@@ -1,0 +1,101 @@
+<html>
+    <head>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container-fluid" style="margin-top: 10px;">
+            <div class="col-md-10">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Chat
+                    </div>
+                    <div class="panel-body">
+                        <div class="row" data-bind="foreach: messages">
+                            <div class="col-md-1" style="border-right: 1px solid #ddd;">
+                                <span data-bind="text: timestamp"></span>
+                            </div>
+                            <div class="col-md-2" style="border-right: 1px solid #ddd;">
+                                <span data-bind="text: from"></span>
+                            </div>
+                            <div class="col-md-9">
+                                <span data-bind="text: text"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer form-inline">
+                        <input class="form-control" style="width: 300px;" type="text" name="text"> <button class="btn btn-default" name="btnSend">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Participants
+                    </div>
+                    <div class="panel-body" data-bind="foreach: users">
+                        <p data-bind="text: username"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <pre data-bind="text: log">
+                </pre>
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <script type="text/javascript">
+            $.fn.pressEnter = function(fn) {  
+
+                return this.each(function() {  
+                    $(this).bind('enterPress', fn);
+                    $(this).keyup(function(e){
+                        if(e.keyCode == 13)
+                        {
+                        $(this).trigger("enterPress");
+                        }
+                    })
+                });  
+            }; 
+            
+            function ChatViewModel()
+            {
+                var self = this;
+                
+                self.users = ko.observableArray();
+                self.messages = ko.observableArray();
+                self.log = ko.observable();
+            }
+            
+            var chatVM = new ChatViewModel();
+            ko.applyBindings( chatVM );
+            
+            
+            
+            
+            var client = new WebSocket("ws://localhost:8080");
+            
+            client.onmessage = function(e)
+            {
+                chatVM.messages.push( JSON.parse(e.data) );
+            }
+            
+            client.onopen = function(e)
+            {
+            }
+
+            $('[name="text"]').pressEnter( function()
+            {
+                $('[name=btnSend]').click();
+            });
+            
+            $('[name=btnSend]').click( function()
+            {
+                var $txt = $('[name="text"]');
+                client.send( $txt.val() );
+                $txt.val('');
+                $txt.focus();
+            });
+        </script>
+    </body>
